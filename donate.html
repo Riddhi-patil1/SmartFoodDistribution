@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add Food Donation - FoodLink</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">FoodLink</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="donate.html">Add Food</a></li>
+                    <li class="nav-item"><a class="nav-link" href="food_list.html">Food List</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5 mb-5">
+        <div class="row justify-content-center">
+            <div class="col-md-7">
+                <div class="card p-4 shadow-sm">
+                    <h3 class="text-center text-success mb-4">Add Food Donation</h3>
+                    <div id="donate-message" class="alert d-none" role="alert"></div>
+                    
+                    <form id="donate-form">
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Food Name</label>
+                            <input type="text" id="food-name" class="form-control" placeholder="e.g. 50 Loaves of Bread" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Quantity</label>
+                            <input type="text" id="food-quantity" class="form-control" placeholder="e.g. 50 items, or 20 kg" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label text-secondary">Pickup Location</label>
+                            <input type="text" id="food-location" class="form-control" placeholder="Full address" required>
+                        </div>
+                        <div class="mb-4">
+                            <label class="form-label text-secondary">Expiry Time</label>
+                            <input type="datetime-local" id="food-expiry" class="form-control" required>
+                        </div>
+                        <button type="submit" id="donate-btn" class="btn btn-primary w-100 py-2">Submit Donation</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/donate.js"></script>
+</body>
+</html>

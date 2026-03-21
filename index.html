@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FoodLink - Smart Food Waste Redistribution</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">FoodLink</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto" id="nav-links">
+                    <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
+                    <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="hero-section">
+        <div class="container" id="hero-content">
+            <h1 class="display-4 fw-bold text-success mb-3">Redistribute Food, <br><span>Reduce Waste</span></h1>
+            <p class="lead mb-4">Connect food providers with NGOs to easily redistribute surplus food footprint-free.</p>
+            <a href="login.html" class="btn btn-primary btn-lg me-2">Donate Food</a>
+            <a href="food_list.html" class="btn btn-outline-success btn-lg">View Food</a>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module">
+        import { auth, onAuthStateChanged, signOut } from './js/firebase-config.js';
+        
+        onAuthStateChanged(auth, (user) => {
+            const navLinks = document.getElementById('nav-links');
+            if (user) {
+                navLinks.innerHTML = `
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link" href="#" id="logout-btn">Logout</a></li>
+                `;
+                document.getElementById('hero-content').innerHTML = `
+                    <h1 class="display-4 fw-bold text-success mb-3">Welcome to FoodLink</h1>
+                    <p class="lead mb-4">Manage your donations and pickups.</p>
+                    <a href="dashboard.html" class="btn btn-primary btn-lg">Go to Dashboard</a>
+                    <a href="food_list.html" class="btn btn-outline-success btn-lg ms-2">View Food List</a>
+                `;
+                document.getElementById('logout-btn').addEventListener('click', (e) => {
+                    e.preventDefault();
+                    signOut(auth).then(() => window.location.href = "index.html");
+                });
+            }
+        });
+    </script>
+</body>
+</html>

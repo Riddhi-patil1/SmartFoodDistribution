@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Available Food Listings - FoodLink</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="css/style.css" rel="stylesheet">
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+        <div class="container">
+            <a class="navbar-brand fw-bold" href="index.html">FoodLink</a>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav ms-auto">
+                    <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
+                    <li class="nav-item"><a class="nav-link d-none" id="nav-add-food" href="donate.html">Add Food</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="food_list.html">Food List</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger d-none" id="nav-logout" href="#">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link text-info d-none" id="nav-login" href="login.html">Login</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-5">
+        <h2 class="text-success mb-4 border-bottom pb-2">Available Food Donations</h2>
+        
+        <div id="loading-spinner" class="text-center my-5 d-none">
+            <div class="spinner-border text-success" role="status"></div>
+            <p class="mt-2 text-secondary">Loading available food...</p>
+        </div>
+        
+        <div id="food-list-container" class="row">
+            <!-- Cards will be dynamically added here -->
+        </div>
+
+        <div id="no-food-msg" class="alert alert-info d-none text-center shadow-sm">
+            Currently, no food is available for pickup. Check back later!
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/food-list.js"></script>
+</body>
+</html>
