@@ -7,8 +7,11 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-    <!-- Google Maps API -->
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDummyKeyForNowPleaseReplace&libraries=places"></script>
+    <!-- Leaflet Maps CSS & JS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 </head>
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
@@ -438,63 +441,93 @@
             });
         }
 
+        let currentLeafletMap = null;
+        let routeControl = null;
+
         window.viewRoute = function(destinationLocation) {
-            const modal = new bootstrap.Modal(document.getElementById('mapModal'));
+            const modalEl = document.getElementById('mapModal');
+            const modal = new bootstrap.Modal(modalEl);
             modal.show();
             
             const mapContainer = document.getElementById('map-container');
             const routeInfo = document.getElementById('route-info');
-            mapContainer.innerHTML = '';
+            mapContainer.innerHTML = '<div class="w-100 h-100 d-flex justify-content-center align-items-center"><div class="spinner-border text-success"></div></div>';
             routeInfo.textContent = 'Calculating route...';
 
+            let ngoLocation = { lat: 19.0760, lng: 72.8777 }; // default fallback 
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(
                     (position) => {
-                        const ngoLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
-                        initMap(ngoLocation, destinationLocation);
+                        ngoLocation = { lat: position.coords.latitude, lng: position.coords.longitude };
+                        initLeafletMap(ngoLocation, destinationLocation);
                     },
                     (error) => {
                         console.error("Geolocation error:", error);
-                        const ngoLocation = { lat: 19.0760, lng: 72.8777 }; 
-                        initMap(ngoLocation, destinationLocation);
+                        initLeafletMap(ngoLocation, destinationLocation);
                     }
                 );
             } else {
-                const ngoLocation = { lat: 19.0760, lng: 72.8777 };
-                initMap(ngoLocation, destinationLocation);
+                initLeafletMap(ngoLocation, destinationLocation);
             }
+
+            // Important: Leaflet requires invalidateSize when rendered inside a previously hidden modal
+            modalEl.addEventListener('shown.bs.modal', function () {
+                if(currentLeafletMap) {
+                    currentLeafletMap.invalidateSize();
+                }
+            }, { once: true });
         };
 
-        function initMap(origin, destinationStr) {
-            if (typeof google === 'undefined') {
-                document.getElementById('map-container').innerHTML = '<div class="text-danger w-100 h-100 d-flex align-items-center justify-content-center">Map API not loaded.</div>';
-                return;
+        async function initLeafletMap(origin, destinationStr) {
+            document.getElementById('map-container').innerHTML = '<div id="leafletMapId" style="width: 100%; height: 100%;"></div>';
+            
+            if(currentLeafletMap !== null) {
+                currentLeafletMap.remove();
+                currentLeafletMap = null;
             }
-            const directionsService = new google.maps.DirectionsService();
-            const directionsRenderer = new google.maps.DirectionsRenderer();
-            const map = new google.maps.Map(document.getElementById("map-container"), {
-                zoom: 12,
-                center: origin,
-            });
-            directionsRenderer.setMap(map);
 
-            directionsService.route(
-                {
-                    origin: origin,
-                    destination: destinationStr,
-                    travelMode: google.maps.TravelMode.DRIVING,
-                },
-                (response, status) => {
-                    if (status === "OK") {
-                        directionsRenderer.setDirections(response);
-                        const leg = response.routes[0].legs[0];
-                        document.getElementById('route-info').textContent = `Distance: ${leg.distance.text} | Est. Time: ${leg.duration.text}`;
-                    } else {
-                        document.getElementById('map-container').innerHTML = '<div class="text-danger w-100 h-100 d-flex align-items-center justify-content-center">Could not find route.</div>';
-                        document.getElementById('route-info').textContent = '';
-                    }
+            currentLeafletMap = L.map('leafletMapId').setView([origin.lat, origin.lng], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                maxZoom: 19,
+                attribution: '© OpenStreetMap'
+            }).addTo(currentLeafletMap);
+
+            try {
+                // Free Geocoding via Nominatim
+                const res = await fetch(`https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(destinationStr)}`);
+                const data = await res.json();
+                
+                if(data && data.length > 0) {
+                    const destLat = parseFloat(data[0].lat);
+                    const destLng = parseFloat(data[0].lon);
+
+                    routeControl = L.Routing.control({
+                        waypoints: [
+                            L.latLng(origin.lat, origin.lng),
+                            L.latLng(destLat, destLng)
+                        ],
+                        routeWhileDragging: false,
+                        addWaypoints: false,
+                        show: false, // Hides the bulky text directions
+                        createMarker: function() { return null; } // Optional: hides default markers
+                    }).addTo(currentLeafletMap);
+
+                    // Add custom markers
+                    L.marker([origin.lat, origin.lng]).addTo(currentLeafletMap).bindPopup("You are here").openPopup();
+                    L.marker([destLat, destLng]).addTo(currentLeafletMap).bindPopup("Pickup Location");
+
+                    routeControl.on('routesfound', function(e) {
+                        const routes = e.routes;
+                        const summary = routes[0].summary;
+                        document.getElementById('route-info').textContent = `Distance: ${(summary.totalDistance / 1000).toFixed(1)} km | Est. Time: ${Math.round(summary.totalTime / 60)} mins`;
+                    });
+                } else {
+                    document.getElementById('route-info').textContent = 'Could not precisely locate the address. Showing your location only.';
                 }
-            );
+            } catch(e) {
+                console.error("Geocoding failed", e);
+                document.getElementById('route-info').textContent = 'Failed to load route data.';
+            }
         }
     </script>
 </body>
