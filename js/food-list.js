@@ -61,50 +61,119 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
+let allDonations = [];
+
 function loadGlobalFoodList() {
     if(loadingSpinner) loadingSpinner.classList.remove('d-none');
     
     const donationsRef = collection(db, "donations");
     const q = query(donationsRef, where("status", "==", "available"));
 
+    let isInitialLoad = true;
     onSnapshot(q, (snapshot) => {
         if(loadingSpinner) loadingSpinner.classList.add('d-none');
         
         foodListContainer.innerHTML = '';
         
         if (snapshot.empty) {
-            if(noFoodMsg) noFoodMsg.classList.remove('d-none');
+            allDonations = [];
         } else {
-            if(noFoodMsg) noFoodMsg.classList.add('d-none');
-            
-            snapshot.forEach((docSnap) => {
-                const food = docSnap.data();
-                const btnHtml = generateAcceptButton(docSnap.id, currentUserRole);
-                
-                const col = document.createElement('div');
-                col.className = 'col-md-6 col-lg-4 mb-4';
-                col.innerHTML = `
-                    <div class="card h-100 shadow-sm border-0">
-                        <div class="card-body">
-                            <h5 class="card-title text-success fw-bold">${food.foodName}</h5>
-                            <span class="badge bg-success mb-2 status-badge">${food.status.toUpperCase()}</span>
-                            <p class="card-text text-secondary mb-1"><strong>Quantity:</strong> ${food.quantity}</p>
-                            <p class="card-text text-secondary mb-1"><strong>Location:</strong> ${food.location}</p>
-                            <p class="card-text text-secondary mb-3"><strong>Expires:</strong> ${food.expiryTime.replace("T", " ")}</p>
-                            ${btnHtml}
-                        </div>
-                    </div>
-                `;
-                foodListContainer.appendChild(col);
-                
-                const acceptBtn = col.querySelector(`#accept-btn-${docSnap.id}`);
-                if (acceptBtn) {
-                    acceptBtn.addEventListener('click', () => acceptDonation(docSnap.id, acceptBtn));
+            allDonations = snapshot.docs.map(docSnap => ({ id: docSnap.id, ...docSnap.data() }));
+        }
+        
+        if (!isInitialLoad && currentUserRole === 'NGO') {
+            snapshot.docChanges().forEach((change) => {
+                if (change.type === "added") {
+                    const food = change.doc.data();
+                    const toastMsg = document.getElementById('toast-body');
+                    const toastEl = document.getElementById('liveToast');
+                    if(toastMsg && toastEl) {
+                        toastMsg.textContent = `New food available nearby: ${food.foodName} (${food.quantity})`;
+                        const toast = new bootstrap.Toast(toastEl);
+                        toast.show();
+                    }
                 }
             });
         }
+        isInitialLoad = false;
+        
+        renderDonations();
     });
 }
+
+function getUrgencyLevel(expiryStr) {
+    const expiryTime = new Date(expiryStr).getTime();
+    const now = new Date().getTime();
+    const diffHours = (expiryTime - now) / (1000 * 60 * 60);
+    
+    if (diffHours < 1) return { level: 'red', text: 'Urgent (< 1 hr)', class: 'bg-danger' };
+    if (diffHours <= 3) return { level: 'orange', text: 'Moderate (1-3 hrs)', class: 'bg-warning text-dark' };
+    return { level: 'green', text: 'Safe (> 3 hrs)', class: 'bg-success' };
+}
+
+function renderDonations() {
+    const locFilter = (document.getElementById('filter-location')?.value || '').toLowerCase();
+    const expFilter = document.getElementById('filter-expiry')?.value || 'all';
+    const minQty = parseInt(document.getElementById('filter-quantity')?.value) || 0;
+
+    let filtered = allDonations.filter(food => {
+        const foodQty = parseInt(food.quantity) || 0;
+        const urgency = getUrgencyLevel(food.expiryTime).level;
+        
+        let matchLoc = food.location.toLowerCase().includes(locFilter);
+        let matchQty = foodQty >= minQty;
+        let matchExp = (expFilter === 'all' || urgency === expFilter);
+        
+        return matchLoc && matchQty && matchExp;
+    });
+
+    // Sort: Urgent first
+    filtered.sort((a, b) => {
+        const uA = getUrgencyLevel(a.expiryTime).level;
+        const uB = getUrgencyLevel(b.expiryTime).level;
+        const weights = { 'red': 1, 'orange': 2, 'green': 3 };
+        return weights[uA] - weights[uB];
+    });
+
+    foodListContainer.innerHTML = '';
+
+    if (filtered.length === 0) {
+        if(noFoodMsg) noFoodMsg.classList.remove('d-none');
+    } else {
+        if(noFoodMsg) noFoodMsg.classList.add('d-none');
+        
+        filtered.forEach((food) => {
+            const btnHtml = generateAcceptButton(food.id, currentUserRole);
+            const urgencyInfo = getUrgencyLevel(food.expiryTime);
+            
+            const col = document.createElement('div');
+            col.className = 'col-md-6 col-lg-4 mb-4';
+            col.innerHTML = `
+                <div class="card h-100 shadow-sm border-0 ${urgencyInfo.level === 'red' ? 'border border-danger border-2' : ''}">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="card-title text-success fw-bold">${food.foodName}</h5>
+                            <span class="badge ${urgencyInfo.class} status-badge">${urgencyInfo.text}</span>
+                        </div>
+                        <p class="card-text text-secondary mb-1"><strong>Quantity:</strong> ${food.quantity}</p>
+                        <p class="card-text text-secondary mb-1"><strong>Location:</strong> ${food.location}</p>
+                        <p class="card-text text-secondary mb-3"><strong>Expires:</strong> ${new Date(food.expiryTime).toLocaleString()}</p>
+                        ${btnHtml}
+                    </div>
+                </div>
+            `;
+            foodListContainer.appendChild(col);
+            
+            const acceptBtn = col.querySelector(`#accept-btn-${food.id}`);
+            if (acceptBtn) {
+                acceptBtn.addEventListener('click', () => acceptDonation(food.id, acceptBtn));
+            }
+        });
+    }
+}
+
+// Add event listeners for filters
+document.getElementById('apply-filters-btn')?.addEventListener('click', renderDonations);
 
 function generateAcceptButton(id, role) {
     if (role === 'NGO') {
@@ -132,7 +201,7 @@ async function acceptDonation(donationId, btn) {
             donationId: donationId,
             ngoId: currentUserId,
             status: "accepted",
-            acceptedAt: serverTimestamp()
+            assignedAt: serverTimestamp()
         });
         
     } catch (error) {

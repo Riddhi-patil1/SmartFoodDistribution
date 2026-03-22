@@ -54,10 +54,11 @@ if (donateForm) {
             // Reset form
             donateForm.reset();
             
-            // Hide message after 3 seconds
+            // Hide message after 1.5 seconds and redirect
             setTimeout(() => {
                 donateMessage.classList.add('d-none');
-            }, 3000);
+                window.location.href = "dashboard.html";
+            }, 1500);
 
         } catch (error) {
             donateMessage.className = "alert alert-danger";
