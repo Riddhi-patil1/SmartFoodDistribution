@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Available Food Listings - FoodLink</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
@@ -34,7 +35,7 @@
             <div class="card-body">
                 <div class="row g-2 align-items-end">
                     <div class="col-md-3">
-                        <label class="form-label text-secondary small mb-1">Location</label>
+                        <label class="form-label text-secondary small mb-1">Location / City</label>
                         <input type="text" id="filter-location" class="form-control form-control-sm" placeholder="e.g. Mumbai">
                     </div>
                     <div class="col-md-3">
@@ -46,12 +47,16 @@
                             <option value="green">Safe (> 3 hrs)</option>
                         </select>
                     </div>
-                    <div class="col-md-3">
-                        <label class="form-label text-secondary small mb-1">Min Quantity</label>
+                    <div class="col-md-2">
+                        <label class="form-label text-secondary small mb-1">Min. Quantity</label>
                         <input type="number" id="filter-quantity" class="form-control form-control-sm" placeholder="e.g. 50">
                     </div>
-                    <div class="col-md-3">
-                        <button class="btn btn-success btn-sm w-100" id="apply-filters-btn">Apply Filters</button>
+                    <div class="col-md-2">
+                        <label class="form-label text-secondary small mb-1">Max Distance(km)</label>
+                        <input type="number" id="filter-distance" class="form-control form-control-sm" placeholder="e.g. 10">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success btn-sm w-100 fw-bold" id="apply-filters-btn"><i class="bi bi-funnel me-1"></i>Apply</button>
                     </div>
                 </div>
             </div>

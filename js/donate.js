@@ -46,24 +46,27 @@ if (donateForm) {
                 createdAt: serverTimestamp()
             });
 
-            // Show success message
-            donateMessage.className = "alert alert-success";
-            donateMessage.textContent = "Donation successfully added!";
-            donateMessage.classList.remove('d-none');
+            // Show success Toast
+            const toastEl = document.getElementById('liveToast');
+            document.getElementById('toast-body').textContent = "Donation successfully added! Redirecting...";
+            toastEl.className = "toast align-items-center text-bg-success border-0";
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
             
             // Reset form
             donateForm.reset();
             
-            // Hide message after 1.5 seconds and redirect
+            // Redirect after 1.5 seconds
             setTimeout(() => {
-                donateMessage.classList.add('d-none');
                 window.location.href = "dashboard.html";
             }, 1500);
 
         } catch (error) {
-            donateMessage.className = "alert alert-danger";
-            donateMessage.textContent = "Failed to add donation. Please try again.";
-            donateMessage.classList.remove('d-none');
+            const toastEl = document.getElementById('liveToast');
+            document.getElementById('toast-body').textContent = "Failed to add donation. Please try again.";
+            toastEl.className = "toast align-items-center text-bg-danger border-0";
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
             console.error("Error adding document: ", error);
         } finally {
             donateBtn.disabled = false;

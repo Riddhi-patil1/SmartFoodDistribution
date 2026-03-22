@@ -5,8 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - FoodLink</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
-    <!-- Google Maps API (Development key or parameter) -->
+    <!-- Google Maps API -->
     <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDummyKeyForNowPleaseReplace&libraries=places"></script>
 </head>
 <body>
@@ -28,8 +29,41 @@
     </nav>
 
     <div class="container mt-5">
-        <h2 class="text-success mb-2" id="welcome-msg">Dashboard</h2>
-        <hr>
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="text-success m-0" id="welcome-msg">Dashboard</h2>
+            <div id="role-badge-container"></div>
+        </div>
+
+        <div id="analytics-dashboard" class="row mb-4 d-none">
+            <div class="col-md-4 mb-3">
+                <div class="card bg-success text-white shadow-sm border-0 h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <i class="bi bi-box-seam fs-1 mb-2"></i>
+                        <h3 id="stat-donations" class="fw-bold m-0">0</h3>
+                        <p class="m-0 text-white-50" id="stat-donations-label">Total Donations</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-primary text-white shadow-sm border-0 h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <i class="bi bi-people fs-1 mb-2"></i>
+                        <h3 id="stat-meals" class="fw-bold m-0">0</h3>
+                        <p class="m-0 text-white-50">Meals Served/Recovered</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-4 mb-3">
+                <div class="card bg-warning text-dark shadow-sm border-0 h-100">
+                    <div class="card-body d-flex flex-column justify-content-center align-items-center">
+                        <i class="bi bi-truck fs-1 mb-2"></i>
+                        <h3 id="stat-pickups" class="fw-bold m-0">0</h3>
+                        <p class="m-0 text-dark-50">Active Pickups</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <hr class="mb-5">
 
         <div id="loading-spinner" class="text-center my-5">
             <div class="spinner-border text-success" role="status"></div>
@@ -167,12 +201,17 @@
                         loadingSpinner.classList.add('d-none');
 
                         if (userData.role === 'Provider') {
+                            document.getElementById('role-badge-container').innerHTML = `<span class="badge bg-success">Provider Profile</span>`;
                             document.getElementById('nav-add-food').classList.remove('d-none');
                             providerView.classList.remove('d-none');
+                            document.getElementById('analytics-dashboard').classList.remove('d-none');
                             initAIPredictor();
                             loadProviderDashboard(user.uid);
                         } else if (userData.role === 'NGO') {
+                            document.getElementById('role-badge-container').innerHTML = `<span class="badge bg-primary">NGO Profile</span>`;
                             ngoView.classList.remove('d-none');
+                            document.getElementById('analytics-dashboard').classList.remove('d-none');
+                            document.getElementById('stat-donations-label').innerText = "Total Recovered Foods";
                             loadNGODashboard(user.uid);
                         }
                     }
@@ -215,6 +254,23 @@
             }
         }
 
+        function formatTimeLeft(expiryStr) {
+            const expiryTime = new Date(expiryStr).getTime();
+            const now = new Date().getTime();
+            if (expiryTime < now) return "Expired";
+            const diffHours = Math.floor((expiryTime - now) / (1000 * 60 * 60));
+            const diffMins = Math.floor(((expiryTime - now) % (1000 * 60 * 60)) / (1000 * 60));
+            return `Expires in: ${diffHours}h ${diffMins}m`;
+        }
+
+        function showToast(msg) {
+            const toastMsg = document.getElementById('toast-body');
+            toastMsg.textContent = msg;
+            const toastEl = document.getElementById('liveToast');
+            const toast = new bootstrap.Toast(toastEl);
+            toast.show();
+        }
+
         function loadProviderDashboard(uid) {
             const listContainer = document.getElementById('provider-donations-list');
             const donationsRef = collection(db, "donations");
@@ -222,13 +278,25 @@
 
             onSnapshot(q, (snapshot) => {
                 listContainer.innerHTML = '';
+                
+                let totalDons = 0;
+                let mealsServed = 0;
+                let activePickups = 0;
+
                 if (snapshot.empty) {
                     listContainer.innerHTML = '<div class="col-12"><div class="alert alert-info">You have not made any donations yet.</div></div>';
+                    document.getElementById('stat-donations').innerText = totalDons;
+                    document.getElementById('stat-meals').innerText = mealsServed;
+                    document.getElementById('stat-pickups').innerText = activePickups;
                     return;
                 }
 
                 snapshot.forEach((docSnap) => {
                     const food = docSnap.data();
+                    totalDons++;
+                    if(food.status === 'delivered') mealsServed += parseInt(food.quantity) || 0;
+                    if(food.status === 'accepted') activePickups++;
+
                     let badgeClass = "bg-success";
                     if(food.status === "accepted") badgeClass = "bg-warning text-dark";
                     if(food.status === "delivered") badgeClass = "bg-secondary";
@@ -239,13 +307,13 @@
                         <div class="card h-100 shadow-sm border-0">
                             <div class="card-body">
                                 <div class="d-flex justify-content-between align-items-start mb-2">
-                                    <h5 class="card-title text-success fw-bold">${food.foodName}</h5>
+                                    <h5 class="card-title text-success fw-bold"><i class="bi bi-basket me-2"></i>${food.foodName}</h5>
                                     <span class="badge ${badgeClass} status-badge">${food.status.toUpperCase()}</span>
                                 </div>
-                                <p class="card-text text-secondary mb-1"><strong>Quantity:</strong> ${food.quantity}</p>
-                                <p class="card-text text-secondary mb-1"><strong>Location:</strong> ${food.location}</p>
-                                <p class="card-text text-secondary mb-3"><strong>Expires:</strong> ${new Date(food.expiryTime).toLocaleString()}</p>
-                                ${food.status === 'accepted' ? `<button class="btn btn-outline-success w-100 btn-sm deliver-btn" data-id="${docSnap.id}">Mark as Delivered</button>` : ''}
+                                <p class="card-text text-secondary mb-1"><i class="bi bi-box me-2"></i><strong>Quantity:</strong> ${food.quantity}</p>
+                                <p class="card-text text-secondary mb-1"><i class="bi bi-geo-alt me-2"></i><strong>Location:</strong> ${food.location}</p>
+                                <p class="card-text ${formatTimeLeft(food.expiryTime)==='Expired' ? 'text-danger' : 'text-secondary'} fw-bold mb-3"><i class="bi bi-clock me-2"></i>${formatTimeLeft(food.expiryTime)}</p>
+                                ${food.status === 'accepted' ? `<button class="btn btn-outline-success w-100 btn-sm deliver-btn" data-id="${docSnap.id}"><i class="bi bi-check-circle me-1"></i>Mark as Delivered</button>` : ''}
                             </div>
                         </div>
                     `;
@@ -271,11 +339,15 @@
                             } catch(err) {
                                 console.error("Error updating status: ", err);
                                 deliverBtn.disabled = false;
-                                deliverBtn.textContent = "Mark as Delivered";
+                                deliverBtn.innerHTML = `<i class="bi bi-check-circle me-1"></i>Mark as Delivered`;
                             }
                         });
                     }
                 });
+                
+                document.getElementById('stat-donations').innerText = totalDons;
+                document.getElementById('stat-meals').innerText = mealsServed;
+                document.getElementById('stat-pickups').innerText = activePickups;
             });
         }
 
@@ -287,21 +359,32 @@
 
             onSnapshot(q, async (snapshot) => {
                 listContainer.innerHTML = '';
+                
+                let totalRec = 0;
+                let mealsRec = 0;
+                let activePickups = 0;
+
                 if (snapshot.empty) {
                     listContainer.innerHTML = '<div class="col-12"><div class="alert alert-info">You have not accepted any pickups yet.</div></div>';
+                    document.getElementById('stat-donations').innerText = totalRec;
+                    document.getElementById('stat-meals').innerText = mealsRec;
+                    document.getElementById('stat-pickups').innerText = activePickups;
                     return;
                 }
 
-                // For each pickup, get the corresponding donation
                 for (let docSnap of snapshot.docs) {
                     const pickup = docSnap.data();
                     try {
+                        totalRec++;
+                        if(pickup.status === 'accepted') activePickups++;
+
                         const donationDoc = await getDoc(doc(db, "donations", pickup.donationId));
                         if (donationDoc.exists()) {
                             const food = donationDoc.data();
+                            if(pickup.status === 'completed' || food.status === 'delivered') mealsRec += parseInt(food.quantity) || 0;
                             
                             let badgeClass = "bg-warning text-dark";
-                            if(food.status === "delivered") badgeClass = "bg-secondary";
+                            if(food.status === "delivered" || pickup.status === "completed") badgeClass = "bg-secondary";
 
                             const col = document.createElement('div');
                             col.className = 'col-md-6 mb-4';
@@ -309,14 +392,14 @@
                                 <div class="card h-100 shadow-sm border-0">
                                     <div class="card-body">
                                         <div class="d-flex justify-content-between align-items-start mb-2">
-                                            <h5 class="card-title text-success fw-bold">${food.foodName}</h5>
+                                            <h5 class="card-title text-success fw-bold"><i class="bi bi-basket me-2"></i>${food.foodName}</h5>
                                             <span class="badge ${badgeClass} status-badge">${food.status.toUpperCase()}</span>
                                         </div>
-                                        <p class="card-text text-secondary mb-1"><strong>Quantity:</strong> ${food.quantity}</p>
-                                        <p class="card-text text-secondary mb-2"><strong>Pickup Location:</strong> ${food.location}</p>
+                                        <p class="card-text text-secondary mb-1"><i class="bi bi-box me-2"></i><strong>Quantity:</strong> ${food.quantity}</p>
+                                        <p class="card-text text-secondary mb-3"><i class="bi bi-geo-alt me-2"></i><strong>Pickup From:</strong> ${food.location}</p>
                                         <div class="d-flex justify-content-between align-items-center">
-                                            <p class="card-text text-secondary mb-0"><strong>Status:</strong> ${pickup.status}</p>
-                                            ${pickup.status === 'accepted' ? `<button class="btn btn-sm btn-outline-primary" onclick="window.viewRoute('${food.location}')">View Route</button>` : ''}
+                                            <p class="card-text text-secondary mb-0"><i class="bi bi-info-circle me-1"></i><strong>Status:</strong> ${pickup.status}</p>
+                                            ${pickup.status === 'accepted' ? `<button class="btn btn-sm btn-outline-primary" onclick="window.viewRoute('${food.location}')"><i class="bi bi-map me-1"></i>View Route</button>` : ''}
                                         </div>
                                     </div>
                                 </div>
@@ -327,6 +410,10 @@
                         console.error("Failed to load donation: ", err);
                     }
                 }
+                
+                document.getElementById('stat-donations').innerText = totalRec;
+                document.getElementById('stat-meals').innerText = mealsRec;
+                document.getElementById('stat-pickups').innerText = activePickups;
             });
 
             // Notification system
