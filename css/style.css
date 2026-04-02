@@ -41,52 +41,113 @@ body {
 }
 
 /* Navbar */
+/* Navbar */
 .navbar {
   background-color: var(--nav-bg) !important;
-  backdrop-filter: blur(8px);
+  backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
-  padding: 0.75rem 0;
-  transition: all 0.3s ease;
+  padding: 1rem 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   position: sticky;
   top: 0;
   z-index: 1000;
+  box-shadow: 0 4px 20px -5px rgba(0, 0, 0, 0.05);
 }
 
 .navbar-brand {
   color: var(--primary-color) !important;
-  font-size: 1.5rem;
-  letter-spacing: -0.5px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  letter-spacing: -0.05em;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 
 .nav-link {
-  color: var(--text-secondary);
-  font-weight: 500;
-  padding: 0.5rem 1rem !important;
+  color: var(--text-secondary) !important;
+  font-weight: 600;
+  padding: 0.65rem 1.25rem !important;
   border-radius: var(--radius-md);
-  transition: all 0.2s ease;
-  margin-left: 0.5rem;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  margin: 0 4px;
+  font-size: 0.95rem;
 }
 
-.nav-link:hover, .nav-link.active {
-  color: var(--primary-color);
-  background-color: #ecfdf5; /* Emerald 50 */
+.nav-link:hover {
+  color: var(--primary-color) !important;
+  background-color: rgba(16, 185, 129, 0.08);
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  color: var(--primary-color) !important;
+  background-color: rgba(16, 185, 129, 0.12);
 }
 
 /* Force text-danger to red when overriding nav-link */
 .nav-link.text-danger, #logout-btn, #nav-logout {
-  color: #dc3545 !important;
+  color: #ef4444 !important;
+}
+.nav-link.text-danger:hover {
+  background-color: #fef2f2 !important;
+}
+
+/* Theme Toggle Enhancement */
+.theme-switch-wrapper {
+  display: flex;
+  align-items: center;
+  margin-left: 1.5rem;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--border-color);
+}
+
+#theme-toggle {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-color);
+  color: var(--text-primary);
+  border: 2px solid var(--border-color);
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: var(--shadow-sm);
+  padding: 0;
+}
+
+#theme-toggle:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  transform: rotate(12deg) scale(1.05);
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+}
+
+[data-theme="dark"] #theme-toggle {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #fbbf24;
+}
+
+[data-theme="dark"] #theme-toggle:hover {
+  background-color: #fbbf24;
+  color: #0f172a;
+  border-color: #fbbf24;
 }
 
 /* Make hamburger icon visible regardless of navbar-dark/light on white background */
 .navbar-toggler {
-  border-color: rgba(0, 0, 0, 0.2) !important;
-  background-color: var(--primary-color) !important;
+  border: none;
+  background-color: rgba(16, 185, 129, 0.1) !important;
+  color: var(--primary-color);
+  padding: 8px;
+  border-radius: 10px;
 }
 .navbar-toggler-icon {
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%28255, 255, 255, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 30 30'%3e%3cpath stroke='rgba%2816, 185, 129, 1%29' stroke-linecap='round' stroke-miterlimit='10' stroke-width='2.5' d='M4 7h22M4 15h22M4 23h22'/%3e%3c/svg%3e") !important;
 }
 
 /* Typography */
@@ -275,25 +336,6 @@ hr {
   cursor: pointer;
   color: var(--text-secondary);
   z-index: 10;
-}
-
-/* Theme Toggle */
-#theme-toggle {
-  background: none;
-  border: none;
-  color: var(--text-secondary);
-  font-size: 1.25rem;
-  padding: 0.5rem;
-  margin-left: 0.5rem;
-  display: flex;
-  align-items: center;
-  cursor: pointer;
-  border-radius: var(--radius-md);
-  transition: all 0.2s;
-}
-#theme-toggle:hover {
-  background-color: var(--bg-color);
-  color: var(--primary-color);
 }
 
 /* Chatbot styles */
