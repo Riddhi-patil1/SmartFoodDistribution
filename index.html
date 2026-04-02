@@ -5,19 +5,27 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FoodLink - Smart Food Waste Redistribution</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="css/style.css" rel="stylesheet">
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">FoodLink</a>
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-hand-holding-heart"></i> FoodLink
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto" id="nav-links">
+                <ul class="navbar-nav ms-auto align-items-center" id="nav-links">
                     <li class="nav-item"><a class="nav-link" href="login.html">Login</a></li>
                     <li class="nav-item"><a class="nav-link" href="register.html">Register</a></li>
+                    <li class="nav-item">
+                        <button id="theme-toggle" title="Toggle Dark/Light Mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -32,7 +40,30 @@
         </div>
     </div>
 
+    <!-- Chatbot Widget -->
+    <div class="chat-widget">
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <h6><i class="fas fa-robot me-2"></i>FoodLink Assistant</h6>
+                <button class="close-chat" id="closeChat"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    Hello! I'm your FoodLink assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type a message...">
+                <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chat-btn" id="chatBtn">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/main.js"></script>
     <script type="module">
         import { auth, onAuthStateChanged, signOut } from './js/firebase-config.js';
         
@@ -41,7 +72,12 @@
             if (user) {
                 navLinks.innerHTML = `
                     <li class="nav-item"><a class="nav-link" href="dashboard.html">Dashboard</a></li>
-                    <li class="nav-item"><a class="nav-link" href="#" id="logout-btn">Logout</a></li>
+                    <li class="nav-item"><a class="nav-link text-danger" href="#" id="logout-btn">Logout</a></li>
+                    <li class="nav-item">
+                        <button id="theme-toggle-nav" class="btn btn-link nav-link" style="border:none; background:none;" title="Toggle Dark/Light Mode">
+                            <i class="fas ${document.documentElement.getAttribute('data-theme') === 'dark' ? 'fa-sun' : 'fa-moon'}"></i>
+                        </button>
+                    </li>
                 `;
                 document.getElementById('hero-content').innerHTML = `
                     <h1 class="display-4 fw-bold text-success mb-3">Welcome to FoodLink</h1>
@@ -53,6 +89,24 @@
                     e.preventDefault();
                     signOut(auth).then(() => window.location.href = "index.html");
                 });
+
+                // Re-bind theme toggle for the new navbar content
+                const themeToggleNav = document.getElementById('theme-toggle-nav');
+                if (themeToggleNav) {
+                    themeToggleNav.addEventListener('click', () => {
+                        const icon = themeToggleNav.querySelector('i');
+                        let theme = document.documentElement.getAttribute('data-theme');
+                        if (theme === 'dark') {
+                            document.documentElement.setAttribute('data-theme', 'light');
+                            localStorage.setItem('theme', 'light');
+                            icon.classList.replace('fa-sun', 'fa-moon');
+                        } else {
+                            document.documentElement.setAttribute('data-theme', 'dark');
+                            localStorage.setItem('theme', 'dark');
+                            icon.classList.replace('fa-moon', 'fa-sun');
+                        }
+                    });
+                }
             }
         });
     </script>

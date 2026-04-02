@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard - FoodLink</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
     <link href="css/style.css" rel="stylesheet">
     <!-- Leaflet Maps CSS & JS -->
@@ -14,18 +15,25 @@
     <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
 </head>
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark shadow-sm">
+    <nav class="navbar navbar-expand-lg shadow-sm">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="index.html">FoodLink</a>
+            <a class="navbar-brand fw-bold" href="index.html">
+                <i class="fas fa-hand-holding-heart"></i> FoodLink
+            </a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto">
+                <ul class="navbar-nav ms-auto align-items-center">
                     <li class="nav-item"><a class="nav-link active" href="dashboard.html">Dashboard</a></li>
                     <li class="nav-item"><a class="nav-link d-none" id="nav-add-food" href="donate.html">Add Food</a></li>
                     <li class="nav-item"><a class="nav-link" href="food_list.html">Food List</a></li>
                     <li class="nav-item"><a class="nav-link text-danger" id="nav-logout" href="#">Logout</a></li>
+                    <li class="nav-item">
+                        <button id="theme-toggle" title="Toggle Dark/Light Mode">
+                            <i class="fas fa-moon"></i>
+                        </button>
+                    </li>
                 </ul>
             </div>
         </div>
@@ -157,8 +165,31 @@
       </div>
     </div>
 
+    <!-- Chatbot Widget -->
+    <div class="chat-widget">
+        <div class="chat-container" id="chatContainer">
+            <div class="chat-header">
+                <h6><i class="fas fa-robot me-2"></i>FoodLink Assistant</h6>
+                <button class="close-chat" id="closeChat"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="chat-messages" id="chatMessages">
+                <div class="message bot">
+                    Hello! I'm your FoodLink assistant. How can I help you today?
+                </div>
+            </div>
+            <div class="chat-input-area">
+                <input type="text" id="chatInput" placeholder="Type a message...">
+                <button id="sendMessage"><i class="fas fa-paper-plane"></i></button>
+            </div>
+        </div>
+        <button class="chat-btn" id="chatBtn">
+            <i class="fas fa-comment-dots"></i>
+        </button>
+    </div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-        <script type="module">
+    <script type="module" src="js/main.js"></script>
+    <script type="module">
         import { 
             auth, 
             db, 
